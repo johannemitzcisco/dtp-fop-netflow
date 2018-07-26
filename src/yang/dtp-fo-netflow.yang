@@ -1,0 +1,131 @@
+module dtp-fo-netflow { 
+
+  namespace "http://www.cisco.com/dtp-fo-netflow";
+  prefix dtpn-netflow;
+
+  import dtp-network { prefix dtpn; }
+  import dtp-fo-link-side-physical { prefix dtplsp; }
+  import dtp-fo-link-side-logical { prefix dtplsl; }
+  import ietf-inet-types { prefix inet; }
+  import tailf-common { prefix tailf; }
+  import tailf-ncs { prefix ncs; }
+
+  description
+    "This is an add on model to the dtp-network package/service";
+
+  revision 2017-11-28 {
+    description
+      "Initial revision.";
+  }
+
+  typedef interface-type {
+    type union {
+      type dtplsp:port-type;
+      type dtplsl:port-type;
+    }
+  }
+
+  grouping netflow-object-common {
+    leaf destination-ip-address {
+      type inet:ipv4-address;
+    }
+    container timeout {
+      leaf interface-table {
+        type uint16;
+      }
+      leaf sampler-table {
+        type uint16;
+      }
+      leaf active {
+        type uint16;
+      }
+      leaf inactive {
+        type uint16;
+      }
+    }
+    leaf ipv4-monitor-map-name {
+      type string;
+    }
+    leaf mpls-monitor-map-name {
+      type string;
+    }
+    leaf sampler-map-name {
+      type string;
+    }
+    leaf cache-entries {
+      type uint32;
+    }
+  }
+
+  grouping netflow-object-interfaces {
+    list interfaces {
+      key "type name";
+      leaf type {
+        type interface-type;
+      }
+      leaf name {
+        type string;
+      }
+    }
+  }
+
+  grouping netflow-fo {
+    list netflow {
+      key name;
+      uses dtpn:function-object;
+    }
+  }
+
+  augment /dtpn:dtp/dtpn:network/dtpn:topology/dtpn:function-objects {
+    list netflow {
+      max-elements 1;
+      key "function-object-name";
+      leaf function-object-name {
+        type leafref {
+          path "/dtpn:dtp/dtpn:function-object-definitions/dtpn:topology/netflow/name";
+        }
+      }
+      uses netflow-object-common;
+      uses netflow-object-interfaces;
+    }
+  }
+
+  augment /dtpn:dtp/dtpn:network/dtpn:topology/dtpn:node/dtpn:function-objects {
+    list netflow {
+      max-elements 1;
+      key "function-object-name";
+      leaf function-object-name {
+        type leafref {
+          path "/dtpn:dtp/dtpn:function-object-definitions/dtpn:node/netflow/name";
+        }
+      }
+      uses netflow-object-common;
+      uses netflow-object-interfaces;
+    }
+  }
+
+  augment /dtpn:dtp/dtpn:network/dtpn:topology/dtpn:link/dtpn:side/dtpn:function-objects {
+    list netflow {
+      max-elements 1;
+      key "function-object-name";
+      leaf function-object-name {
+        type leafref {
+          path "/dtpn:dtp/dtpn:function-object-definitions/dtpn:link/dtpn:side/netflow/name";
+        }
+      }
+      uses netflow-object-common;
+    }
+  }
+
+  augment /dtpn:dtp/dtpn:function-object-definitions/dtpn:topology {
+    uses netflow-fo;
+  }
+
+  augment /dtpn:dtp/dtpn:function-object-definitions/dtpn:node {
+    uses netflow-fo;
+  }
+
+  augment /dtpn:dtp/dtpn:function-object-definitions/dtpn:link/dtpn:side {
+    uses netflow-fo;
+  }
+}
